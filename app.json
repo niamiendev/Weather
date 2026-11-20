@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Vinka",
-    "slug": "Vinka",
+    "name": "Weather",
+    "slug": "Weather",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "vinka",
+    "scheme": "weather",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
@@ -37,6 +37,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "expo": {
+      "web": {
+        "bundler": "metro"
+      }
     }
   }
 }
