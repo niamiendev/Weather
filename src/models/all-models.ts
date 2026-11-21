@@ -65,3 +65,18 @@ export interface Daily {
   temperature_2m_min: number[];
   temperature_2m_max: number[];
 }
+
+export type DailyItem = {
+  id: number;
+  temp_max: number;
+  temp_min: number;
+  time: string;
+  code: number;
+};
+
+export type HourlyItem = {
+  id: number;
+  temp: number;
+  hour: string;
+  code: number;
+};

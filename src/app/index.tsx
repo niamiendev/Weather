@@ -1,10 +1,13 @@
 import { useWeather } from "@/hooks/useWeather";
+import { DailyItem, HourlyItem } from "@/models/all-models";
 import { getWeatherIcon } from "@/utils/weather";
 import { getWeatherDescription } from "@/utils/weather-des";
 import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,20 +16,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import "../../global.css";
 
-export type DailyItem = {
-  id: number;
-  temp_max: number;
-  temp_min: number;
-  time: string;
-  code: number;
-};
-
-export type HourlyItem = {
-  id: number;
-  temp: number;
-  hour: string;
-  code: number;
-};
+const DEFAULT_LATITUDE = 5.36;
+const DEFAULT_LONGITUDE = -4.008;
+const DEFAULT_NAME = "Abidjan";
 
 const convertDate = (date: string) => {
   const day = new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", {
@@ -37,7 +29,17 @@ const convertDate = (date: string) => {
 };
 
 export default function Index() {
-  const { data, loading } = useWeather();
+  const router = useRouter();
+  const { lat, lon, name } = useLocalSearchParams<{
+    lat?: string;
+    lon?: string;
+    name?: string;
+  }>();
+
+  const latitude = lat ? Number(lat) : DEFAULT_LATITUDE;
+  const longitude = lon ? Number(lon) : DEFAULT_LONGITUDE;
+
+  const { data, loading } = useWeather(latitude, longitude);
 
   const daily = useMemo<DailyItem[]>(() => {
     if (!data?.daily) return [];
@@ -54,10 +56,11 @@ export default function Index() {
   const hourly = useMemo<HourlyItem[]>(() => {
     if (!data?.hourly || !data?.current) return [];
 
-    const currentTime = data.current.time;
+    // "2026-11-21T14:15" -> "2026-11-21T14" pour retrouver l'heure en cours
+    const currentHour = data.current.time.slice(0, 13);
 
     const currentIndex = data.hourly.time.findIndex(
-      (time) => time >= currentTime,
+      (time) => time.slice(0, 13) >= currentHour,
     );
 
     if (currentIndex === -1) return [];
@@ -71,6 +74,10 @@ export default function Index() {
         code: data.hourly.weather_code[currentIndex + index],
       }));
   }, [data]);
+
+  const handleSearch = () => {
+    router.push("/search");
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -91,12 +98,16 @@ export default function Index() {
 
               <View>
                 <Text className="text-xs text-gray-500">Your location</Text>
-                <Text className="text-lg font-bold">Côte d'Ivoire</Text>
+                <Text className="text-lg font-bold">
+                  {name ?? DEFAULT_NAME}
+                </Text>
               </View>
             </View>
 
-            {/* Settings */}
-            <Ionicons name="settings-outline" size={26} color="#333" />
+            {/* Search */}
+            <Pressable onPress={handleSearch} hitSlop={12}>
+              <Ionicons name="search-outline" size={26} color="#333" />
+            </Pressable>
           </View>
 
           {/* Current Weather */}
@@ -140,7 +151,7 @@ export default function Index() {
               className="mt-4"
             >
               {hourly.map((item) => (
-                <View key={item.hour} className="items-center gap-2">
+                <View key={item.id} className="items-center gap-2">
                   <Text className="text-base">{item.hour}</Text>
 
                   <Ionicons
